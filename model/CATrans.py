@@ -36,7 +36,8 @@ class CATrans(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 # 初始化均匀分布
-                nn.init.xavier_uniform_(m.weight)
+                # nn.init.xavier_uniform_(m.weight)
+                nn.init.xavier_normal_(m.weight)
                 if hasattr(m, 'bias') and m.bias is not None:
                     nn.init.constant_(m.bias, 0)
 
@@ -86,6 +87,7 @@ class CATrans(nn.Module):
         Fq4_flatten = torch.transpose(Fq4_flatten, 1, 2)
         out3 = self.rct2(Fm=Fm4_flatten, Fq=Fq4_flatten, Fs=Fs4_flatten, out_dim=576)
         out3 = torch.transpose(out3, 1, 2)
+        # print(out3[0])
         Fms4 = torch.concat([Fm4_flatten, Fs4_flatten], dim=2)
 #         print(Fms4.shape)
         out4 = self.rat2(Fq=Fq4_flatten, Fs=Fs4_flatten, out_dim=576,Fms = Fms4)
@@ -102,6 +104,7 @@ class CATrans(nn.Module):
 #         print("feature 4 dim:" + str(feature4.shape))
         # decoder工作
         predict_label = self.decoder(feature1=feature1,feature2=feature2,feature3=feature3,feature4=feature4)
+        # print(predict_label[0,0])
 #         print("predict dim:" + str(predict_label.shape))
         # predict_label = predict_label * 255
         main_loss = self.criterion(predict_label, query_mask)

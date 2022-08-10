@@ -59,7 +59,8 @@ def main(args):
     train_transform = [
         transform.RandomHorizontalFlip(),
         transform.Resize(size=args.train_size),
-        transform.ToTensor()]
+        transform.ToTensor(),
+        transform.Normalize(mean=mean, std=std)]
     train_transform = transform.Compose(train_transform)
     # 加载数据
     logger.info("=> loading data ...")
@@ -67,7 +68,7 @@ def main(args):
                          data_list=args.train_list, transform=train_transform, mode='train',
                          use_coco=args.use_coco, use_split_coco=args.use_split_coco)
     train_sampler = None
-    train_loader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, shuffle=(train_sampler is None),
+    train_loader = torch.utils.data.DataLoader(train_data, batch_size=8, shuffle=(train_sampler is None),
                                                num_workers=args.workers, pin_memory=True, sampler=train_sampler,
                                                drop_last=True)
     # 创建模型
@@ -85,11 +86,11 @@ def main(args):
         for epoch in range(args.start_epoch,args.epochs):
             train(train_loader,model,optimizer,epoch)
         # 保存模型
-        filename = 'final2.pth'
+        filename = 'final3.pth'
         logger.info('Saving checkpoint to: ' + filename)
         torch.save({'epoch': args.epochs, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}, filename)
     except Exception as err:
-        filename = 'final2.pth'
+        filename = 'final3.pth'
         logger.info('Saving checkpoint to: ' + filename)
         torch.save({'epoch': args.epochs, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()},
                    filename)
