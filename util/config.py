@@ -53,13 +53,12 @@ class CfgNode(dict):
         r += "\n".join(s)
         return r
 
-    def __repr__(self):
+    def __repr__(self):  # print
         return "{}({})".format(self.__class__.__name__, super(CfgNode, self).__repr__())
 
 
 def load_cfg_from_cfg_file(file):
     cfg = {}
-    print(os.path.isfile(file))
     assert os.path.isfile(file) and file.endswith('.yaml'), \
         '{} is not a yaml file'.format(file)
 
@@ -71,6 +70,15 @@ def load_cfg_from_cfg_file(file):
             cfg[k] = v
 
     cfg = CfgNode(cfg)
+    return cfg
+
+
+def merge_cfg_from_args(cfg, args):
+    args_dict = args.__dict__
+    for k, v in args_dict.items():
+        if not k == 'config' or k == 'opts':
+            cfg[k] = v
+
     return cfg
 
 
@@ -164,3 +172,4 @@ def _assert_with_logging(cond, msg):
     if not cond:
         logger.debug(msg)
     assert cond, msg
+

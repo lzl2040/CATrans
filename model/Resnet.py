@@ -17,6 +17,7 @@ class Resnet50(nn.Module):
         super().train(mode)
         # 冻结BN层
         if self.freeze_bn:
+            print('freeze')
             for m in self.modules():
                 if isinstance(m, nn.BatchNorm2d):
                     m.eval()
@@ -25,7 +26,6 @@ class Resnet50(nn.Module):
         # 模型的结构
         # S1
         output = self.net.conv1(input)
-
         output = self.net.bn1(output)
         output = self.net.relu(output)
         F1 = output
@@ -39,5 +39,18 @@ class Resnet50(nn.Module):
         # S4
         output = self.net.layer3(output)
         F4 = output
-        # 得到输出
+        # modify 2022.9.3
+        # S1
+        # output = self.net.maxpool(output)
+        # output = self.net.layer1(output)
+        # F1 = output
+        # # S2
+        # output = self.net.layer2(output)
+        # F2 = output
+        # # S3
+        # output = self.net.layer3(output)
+        # F3 = output
+        # # S4
+        # output = self.net.layer4(output)
+        # F4 = output
         return F1,F2,F3,F4

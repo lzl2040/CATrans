@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="ubuntu@172.22.9.93:22" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="root@region-3.autodl.com:42883" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
       <paths name="lzl@172.22.112.86:22">
         <serverdata>
@@ -13,6 +13,13 @@
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="root@region-3.autodl.com:42883">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/root/Project/CATrans3" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
