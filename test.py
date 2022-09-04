@@ -23,10 +23,9 @@ from torch.utils.data.distributed import DistributedSampler
 
 from tensorboardX import SummaryWriter
 
-from model import BAM
 
 from util import dataset
-from util import transform, transform_tri, config
+from util import transform, config
 from util.util import AverageMeter, poly_learning_rate, intersectionAndUnionGPU, get_model_para_number, setup_seed, \
     get_logger, get_save_path, \
     is_same_model, fix_bn, sum_list, check_makedirs

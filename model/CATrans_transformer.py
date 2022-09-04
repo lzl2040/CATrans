@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 # 前馈神经网络
 class FFN(nn.Module):
-    def __init__(self,input_channel,d_in,d_hid,d_out,dropout=0.6):
+    def __init__(self,input_channel,d_in,d_hid,d_out,dropout=0.4):
         super(FFN, self).__init__()
         self.w1 = nn.Linear(d_in, d_hid)
         self.w2 = nn.Linear(d_hid, d_out)
@@ -55,7 +55,7 @@ class RCT(nn.Module):
 
 # affinity
 class RAT(nn.Module):
-    def __init__(self,num_heads,Fms_out,Fs_out,Fq_out,channel,d_hid,q_dim,k_dim,v_dim,dropout=0.6):
+    def __init__(self,num_heads,Fms_out,Fs_out,Fq_out,channel,d_hid,q_dim,k_dim,v_dim,dropout=0.1):
         super(RAT,self).__init__()
         self.num_heads = num_heads
         self.fc1 = nn.Linear(in_features=Fms_out,out_features=Fms_out)
@@ -108,57 +108,29 @@ class Conv(nn.Module):
 class MaskEncoder(nn.Module):
     def __init__(self):
         super(MaskEncoder,self).__init__()
-        # self.layer1 = nn.Sequential(
-        #     nn.Conv2d(1,64,kernel_size=3,stride=2,padding=1),
-        #     nn.BatchNorm2d(64),
-        #     nn.ReLU(inplace=True)
-        # )
         self.layer1 = nn.Sequential(
-            nn.Conv2d(1,64,kernel_size=3,stride=2,padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True)
-        )
-
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(64, 256, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(1,256,kernel_size=3,stride=4,padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True)
         )
 
-        self.layer3 = nn.Sequential(
+        self.layer2 = nn.Sequential(
             nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=True)
         )
 
-        self.layer4 = nn.Sequential(
+        self.layer3 = nn.Sequential(
             nn.Conv2d(512, 1024, kernel_size=3, stride=2, padding=1),
             nn.BatchNorm2d(1024),
             nn.ReLU(inplace=True)
         )
-#         self.layer1 = nn.Sequential(
-#             nn.Conv2d(1,16,kernel_size=3,stride=2,padding=1),
-#             nn.BatchNorm2d(16),
-#             nn.ReLU(inplace=True)
-#         )
 
-#         self.layer2 = nn.Sequential(
-#             nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1),
-#             nn.BatchNorm2d(32),
-#             nn.ReLU(inplace=True)
-#         )
-
-#         self.layer3 = nn.Sequential(
-#             nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
-#             nn.BatchNorm2d(64),
-#             nn.ReLU(inplace=True)
-#         )
-
-#         self.layer4 = nn.Sequential(
-#             nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1),
-#             nn.BatchNorm2d(64),
-#             nn.ReLU(inplace=True)
-#         )
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(1024, 2048, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(2048),
+            nn.ReLU(inplace=True)
+        )
 
     def forward(self,x):
         output = self.layer1(x)
@@ -173,12 +145,9 @@ class MaskEncoder(nn.Module):
 
 # multi head attention
 class AttentionBlock(nn.Module):
-    def __init__(self,num_heads,LN,FFN,q_in,k_in,v_in,dropout=0.6):
+    def __init__(self,num_heads,LN,FFN,q_in,k_in,v_in,dropout=0.1):
         super(AttentionBlock,self).__init__()
         self.num_heads = num_heads
-        # self.fc_q = nn.Linear(in_features=input_dim,out_features=output_dim)
-        # self.fc_k = nn.Linear(in_features=input_dim,out_features=output_dim)
-        # self.fc_v = nn.Linear(in_features=input_dim, out_features=output_dim)
         self.fc_q = nn.Linear(in_features=q_in,out_features=q_in)
         self.fc_k = nn.Linear(in_features=k_in,out_features=k_in)
         self.fc_v = nn.Linear(in_features=v_in, out_features=v_in)
@@ -227,17 +196,12 @@ class AttentionBlock(nn.Module):
 class Decoder(nn.Module):
     def __init__(self,in1,in2,in3,in4,in5):
         super(Decoder,self).__init__()
-        self.conv1 = Conv(in_channels=in1,out_channels=512,ks=3,st=2,p=1)
-        self.conv2 = Conv(in_channels=in2,out_channels=512,ks=3,st=2,p=1)
-        self.conv3 = Conv(in_channels=in3,out_channels=512,ks=3,st=2,p=1)
-        self.conv4 = Conv(in_channels=in4,out_channels=512,ks=3,st=2,p=1)
-        # self.conv1 = Conv(in_channels=in1,out_channels=256,ks=3,st=1,p=1)
-        # self.conv2 = Conv(in_channels=in2,out_channels=256,ks=3,st=1,p=1)
-        # self.conv3 = Conv(in_channels=in3,out_channels=256,ks=3,st=1,p=1)
-        # self.conv4 = Conv(in_channels=in4,out_channels=256,ks=3,st=1,p=1)
+        self.conv1 = Conv(in_channels=in1,out_channels=512,ks=1,st=1,p=0)
+        self.conv2 = Conv(in_channels=in2,out_channels=512,ks=1,st=1,p=0)
+        self.conv3 = Conv(in_channels=in3,out_channels=512,ks=1,st=1,p=0)
+        self.conv4 = Conv(in_channels=in4,out_channels=512,ks=1,st=1,p=0)
         # 1*1 conv 转换维度
         self.conv5 = Conv(in_channels=in5,out_channels=2,ks=1,st=1,p=0)
-        # self.conv5 = Conv(in_channels=in5,out_channels=2,ks=3,st=2,p=1)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self,feature1,feature2,feature3,feature4):
@@ -258,14 +222,14 @@ class Decoder(nn.Module):
         predict_label = self.relu(predict_label)
         return predict_label
 
-    def conv(self,x,conv_layer,upsample=False,times=2,up_mode='nearest'):
+    def conv(self,x,conv_layer,upsample=False,times=2,up_mode='bilinear'):
         output = conv_layer(x)
         # 需要上采样
         if upsample == True:
             output = self.upsample(output,times=times,up_mode=up_mode)
         return output
 
-    def upsample(self,x,times,up_mode='nearest'):
+    def upsample(self,x,times,up_mode='bilinear'):
         target_dim = x.shape[-1] * times
         if up_mode == 'bilinear':
             output = F.interpolate(
