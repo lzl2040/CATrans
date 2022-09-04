@@ -6,8 +6,8 @@ import torch.nn.functional as F
 class FFN(nn.Module):
     def __init__(self,input_channel,d_in,d_hid,d_out,dropout=0.4):
         super(FFN, self).__init__()
-        self.w1 = nn.Linear(d_in, d_hid)
-        self.w2 = nn.Linear(d_hid, d_out)
+        self.w1 = nn.Linear(d_in, d_hid,bias=False)
+        self.w2 = nn.Linear(d_hid, d_out,bias=False)
         self.activate = nn.ReLU(inplace=True)
         self.layer_norm = nn.LayerNorm(input_channel, eps=1e-6)
         self.dropout_1 = nn.Dropout(dropout)
@@ -21,8 +21,9 @@ class FFN(nn.Module):
         x = self.dropout_1(x)
         x = self.w2(x)
         x = self.dropout_2(x)
-        x += residual
         x = self.layer_norm(x)
+        x += residual
+        # x = self.layer_norm(x)
         return x
 
 # context
@@ -58,12 +59,12 @@ class RAT(nn.Module):
     def __init__(self,num_heads,Fms_out,Fs_out,Fq_out,channel,d_hid,q_dim,k_dim,v_dim,dropout=0.1):
         super(RAT,self).__init__()
         self.num_heads = num_heads
-        self.fc1 = nn.Linear(in_features=Fms_out,out_features=Fms_out)
-        self.fc2 = nn.Linear(in_features=Fms_out,out_features=Fms_out)
-        self.fc3 = nn.Linear(in_features=Fs_out, out_features=Fs_out)
-        self.fc4 = nn.Linear(in_features=Fq_out, out_features=Fq_out)
-        self.fc5 = nn.Linear(in_features=Fq_out, out_features=Fq_out)
-        self.fc6 = nn.Linear(in_features=Fq_out, out_features=Fq_out)
+        self.fc1 = nn.Linear(in_features=Fms_out,out_features=Fms_out,bias=False)
+        self.fc2 = nn.Linear(in_features=Fms_out,out_features=Fms_out,bias=False)
+        self.fc3 = nn.Linear(in_features=Fs_out, out_features=Fs_out,bias=False)
+        self.fc4 = nn.Linear(in_features=Fq_out, out_features=Fq_out,bias=False)
+        self.fc5 = nn.Linear(in_features=Fq_out, out_features=Fq_out,bias=False)
+        self.fc6 = nn.Linear(in_features=Fq_out, out_features=Fq_out,bias=False)
         self.LN = nn.LayerNorm(channel, eps=1e-6)
         self.FFN = FFN(input_channel=channel, d_in=channel, d_hid=d_hid, d_out=channel)
         self.block1 = AttentionBlock(num_heads = 2,LN=self.LN,FFN=self.FFN,q_in=q_dim,k_in=k_dim,v_in=v_dim)
@@ -148,10 +149,10 @@ class AttentionBlock(nn.Module):
     def __init__(self,num_heads,LN,FFN,q_in,k_in,v_in,dropout=0.1):
         super(AttentionBlock,self).__init__()
         self.num_heads = num_heads
-        self.fc_q = nn.Linear(in_features=q_in,out_features=q_in)
-        self.fc_k = nn.Linear(in_features=k_in,out_features=k_in)
-        self.fc_v = nn.Linear(in_features=v_in, out_features=v_in)
-        self.fc_qkv = nn.Linear(in_features=v_in, out_features=v_in)
+        self.fc_q = nn.Linear(in_features=q_in,out_features=q_in,bias=False)
+        self.fc_k = nn.Linear(in_features=k_in,out_features=k_in,bias=False)
+        self.fc_v = nn.Linear(in_features=v_in, out_features=v_in,bias=False)
+        self.fc_qkv = nn.Linear(in_features=v_in, out_features=v_in,bias=False)
         self.LN = LN
         self.FFN = FFN
         self.dropout_layer = nn.Dropout(dropout)
