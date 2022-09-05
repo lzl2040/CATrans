@@ -24,21 +24,19 @@ class Resnet50(nn.Module):
 
     def forward(self, input):
         # 模型的结构
+        # S1
         output = self.net.conv1(input)
         output = self.net.bn1(output)
         output = self.net.relu(output)
-        # modify 2022.9.3
-        # S1
-        output = self.net.maxpool(output)
-        output = self.net.layer1(output)
         F1 = output
         # S2
-        output = self.net.layer2(output)
+        output = self.net.maxpool(output)
+        output = self.net.layer1(output)
         F2 = output
         # S3
-        output = self.net.layer3(output)
+        output = self.net.layer2(output)
         F3 = output
         # S4
-        output = self.net.layer4(output)
+        output = self.net.layer3(output)
         F4 = output
         return F1,F2,F3,F4

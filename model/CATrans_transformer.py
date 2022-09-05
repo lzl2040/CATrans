@@ -6,8 +6,8 @@ import torch.nn.functional as F
 class FFN(nn.Module):
     def __init__(self,input_channel,d_in,d_hid,d_out,dropout=0.4):
         super(FFN, self).__init__()
-        self.w1 = nn.Linear(d_in, d_hid,bias=False)
-        self.w2 = nn.Linear(d_hid, d_out,bias=False)
+        self.w1 = nn.Linear(d_in, d_hid)
+        self.w2 = nn.Linear(d_hid, d_out)
         self.activate = nn.ReLU(inplace=True)
         self.layer_norm = nn.LayerNorm(input_channel, eps=1e-6)
         self.dropout_1 = nn.Dropout(dropout)
@@ -21,8 +21,8 @@ class FFN(nn.Module):
         x = self.dropout_1(x)
         x = self.w2(x)
         x = self.dropout_2(x)
-        x = self.layer_norm(x)
-        x += residual
+        # x = self.layer_norm(x)
+        # x += residual
         # x = self.layer_norm(x)
         return x
 
@@ -59,12 +59,12 @@ class RAT(nn.Module):
     def __init__(self,num_heads,Fms_out,Fs_out,Fq_out,channel,d_hid,q_dim,k_dim,v_dim,dropout=0.1):
         super(RAT,self).__init__()
         self.num_heads = num_heads
-        self.fc1 = nn.Linear(in_features=Fms_out,out_features=Fms_out,bias=False)
-        self.fc2 = nn.Linear(in_features=Fms_out,out_features=Fms_out,bias=False)
-        self.fc3 = nn.Linear(in_features=Fs_out, out_features=Fs_out,bias=False)
-        self.fc4 = nn.Linear(in_features=Fq_out, out_features=Fq_out,bias=False)
-        self.fc5 = nn.Linear(in_features=Fq_out, out_features=Fq_out,bias=False)
-        self.fc6 = nn.Linear(in_features=Fq_out, out_features=Fq_out,bias=False)
+        self.fc1 = nn.Linear(in_features=Fms_out,out_features=Fms_out)
+        self.fc2 = nn.Linear(in_features=Fms_out,out_features=Fms_out)
+        self.fc3 = nn.Linear(in_features=Fs_out, out_features=Fs_out)
+        self.fc4 = nn.Linear(in_features=Fq_out, out_features=Fq_out)
+        self.fc5 = nn.Linear(in_features=Fq_out, out_features=Fq_out)
+        self.fc6 = nn.Linear(in_features=Fq_out, out_features=Fq_out)
         self.LN = nn.LayerNorm(channel, eps=1e-6)
         self.FFN = FFN(input_channel=channel, d_in=channel, d_hid=d_hid, d_out=channel)
         self.block1 = AttentionBlock(num_heads = 2,LN=self.LN,FFN=self.FFN,q_in=q_dim,k_in=k_dim,v_in=v_dim)
@@ -110,26 +110,26 @@ class MaskEncoder(nn.Module):
     def __init__(self):
         super(MaskEncoder,self).__init__()
         self.layer1 = nn.Sequential(
-            nn.Conv2d(1,256,kernel_size=3,stride=4,padding=1),
-            nn.BatchNorm2d(256),
+            nn.Conv2d(1,64,kernel_size=3,stride=2,padding=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True)
         )
 
         self.layer2 = nn.Sequential(
+            nn.Conv2d(64, 256, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True)
+        )
+
+        self.layer3 = nn.Sequential(
             nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=True)
         )
 
-        self.layer3 = nn.Sequential(
+        self.layer4 = nn.Sequential(
             nn.Conv2d(512, 1024, kernel_size=3, stride=2, padding=1),
             nn.BatchNorm2d(1024),
-            nn.ReLU(inplace=True)
-        )
-
-        self.layer4 = nn.Sequential(
-            nn.Conv2d(1024, 2048, kernel_size=3, stride=2, padding=1),
-            nn.BatchNorm2d(2048),
             nn.ReLU(inplace=True)
         )
 
@@ -149,10 +149,10 @@ class AttentionBlock(nn.Module):
     def __init__(self,num_heads,LN,FFN,q_in,k_in,v_in,dropout=0.1):
         super(AttentionBlock,self).__init__()
         self.num_heads = num_heads
-        self.fc_q = nn.Linear(in_features=q_in,out_features=q_in,bias=False)
-        self.fc_k = nn.Linear(in_features=k_in,out_features=k_in,bias=False)
-        self.fc_v = nn.Linear(in_features=v_in, out_features=v_in,bias=False)
-        self.fc_qkv = nn.Linear(in_features=v_in, out_features=v_in,bias=False)
+        self.fc_q = nn.Linear(in_features=q_in,out_features=q_in)
+        self.fc_k = nn.Linear(in_features=k_in,out_features=k_in)
+        self.fc_v = nn.Linear(in_features=v_in, out_features=v_in)
+        self.fc_qkv = nn.Linear(in_features=v_in, out_features=v_in)
         self.LN = LN
         self.FFN = FFN
         self.dropout_layer = nn.Dropout(dropout)
@@ -197,13 +197,13 @@ class AttentionBlock(nn.Module):
 class Decoder(nn.Module):
     def __init__(self,in1,in2,in3,in4,in5):
         super(Decoder,self).__init__()
-        self.conv1 = Conv(in_channels=in1,out_channels=512,ks=1,st=1,p=0)
-        self.conv2 = Conv(in_channels=in2,out_channels=512,ks=1,st=1,p=0)
-        self.conv3 = Conv(in_channels=in3,out_channels=512,ks=1,st=1,p=0)
-        self.conv4 = Conv(in_channels=in4,out_channels=512,ks=1,st=1,p=0)
+        self.conv1 = Conv(in_channels=in1,out_channels=256,ks=3,st=2,p=1)
+        self.conv2 = Conv(in_channels=in2,out_channels=256,ks=3,st=2,p=1)
+        self.conv3 = Conv(in_channels=in3,out_channels=256,ks=3,st=2,p=1)
+        self.conv4 = Conv(in_channels=in4,out_channels=256,ks=3,st=2,p=1)
         # 1*1 conv 转换维度
-        self.conv5 = Conv(in_channels=in5,out_channels=2,ks=1,st=1,p=0)
-        self.relu = nn.ReLU(inplace=True)
+        self.conv5 = Conv(in_channels=in5,out_channels=2,ks=3,st=1,p=1)
+        # self.conv5 = nn.Conv2d(in_channels=in5,out_channels=2,kernel_size=1,stride=1,padding=0)
 
     def forward(self,feature1,feature2,feature3,feature4):
         predict_label = self.conv(feature1,conv_layer=self.conv1,upsample=True)
@@ -220,7 +220,7 @@ class Decoder(nn.Module):
         predict_label = self.conv5(predict_label)
         predict_label = self.upsample(predict_label,times=4,up_mode='bilinear')
         predict_label = torch.squeeze(predict_label)
-        predict_label = self.relu(predict_label)
+        # predict_label = self.relu(predict_label)
         return predict_label
 
     def conv(self,x,conv_layer,upsample=False,times=2,up_mode='bilinear'):

@@ -36,16 +36,23 @@ class CATrans(nn.Module):
         ## mask_encoder
         self.mask_encoder = MaskEncoder()
         ## decoder
-        self.decoder = Decoder(in1=2192, in2=1600, in3=512, in4=256, in5=2048)
+        # self.decoder = Decoder(in1=2192, in2=1600, in3=512, in4=256, in5=2048)
+        self.decoder = Decoder(in1=1600, in2=2816, in3=256, in4=64, in5=1024)
         ## rct
-        self.rct1 = RCT(num_heads=2, m_dim=1024, nm_dim=1024, channel=1024, d_hid=1024)
-        self.rct2 = RCT(num_heads=2, m_dim=2048, nm_dim=2048, channel=2048, d_hid=2048)
+        # self.rct1 = RCT(num_heads=2, m_dim=1024, nm_dim=1024, channel=1024, d_hid=1024)
+        # self.rct2 = RCT(num_heads=2, m_dim=2048, nm_dim=2048, channel=2048, d_hid=2048)
+        self.rct1 = RCT(num_heads=2, m_dim=512, nm_dim=512, channel=512, d_hid=1024)
+        self.rct2 = RCT(num_heads=2, m_dim=1024, nm_dim=1024, channel=1024, d_hid=2048)
         ## rat
-        self.rat1 = RAT(num_heads=2, Fms_out=2048, Fq_out=1024, Fs_out=1024, channel=576, d_hid=2048, q_dim=576,
-                        k_dim=576, v_dim=576)
-        self.rat2 = RAT(num_heads=2, Fms_out=4096, Fq_out=2048, Fs_out=2048, channel=144, d_hid=2048, q_dim=144,
-                        k_dim=144, v_dim=144)
-        # self.conv5 = Conv(in_channels=512, out_channels=1, ks=1, st=1, p=0)
+        # self.rat1 = RAT(num_heads=2, Fms_out=2048, Fq_out=1024, Fs_out=1024, channel=576, d_hid=2048, q_dim=576,
+        #                 k_dim=576, v_dim=576)
+        # self.rat2 = RAT(num_heads=2, Fms_out=4096, Fq_out=2048, Fs_out=2048, channel=144, d_hid=2048, q_dim=144,
+        #                 k_dim=144, v_dim=144)
+        self.rat1 = RAT(num_heads=2, Fms_out=1024, Fq_out=512, Fs_out=512, channel=2304, d_hid=3072, q_dim=2304,
+                        k_dim=2304, v_dim=2304)
+        self.rat2 = RAT(num_heads=2, Fms_out=2048, Fq_out=1024, Fs_out=1024, channel=576, d_hid=2048, q_dim=576,
+                        k_dim=576,v_dim=576)
+
         # 初始权值
         self.init_weight()
 
@@ -59,7 +66,7 @@ class CATrans(nn.Module):
                     nn.init.constant_(m.bias, 0)
 
     def setCondition(self, mode):
-        this.training = mode
+        self.training = mode
 
     def forward(self, x, index):
         # 维度:support_image (N * S * C * H * W),S为shot数,N为类别数,C为通道数,H为图像的高,W为图像的宽
