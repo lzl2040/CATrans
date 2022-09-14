@@ -304,9 +304,11 @@ def train(train_loader, model, optimizer, epoch):
         current_iter = epoch * len(train_loader) + i + 1
 
         # poly_learning_rate(optimizer, args.base_lr, current_iter, max_iter, power=args.power, index_split=args.index_split, warmup=args.warmup, warmup_step=len(train_loader)//2)
-
-        s_input = s_input.cuda(non_blocking=True)
-        s_mask = s_mask.cuda(non_blocking=True)
+        for k in range(len(s_input)):
+            s_input[k] = s_input[k].cuda(non_blocking=True)
+            s_mask[k] = s_mask[k].cuda(non_blocking=True)
+        # s_input = s_input.cuda(non_blocking=True)
+        # s_mask = s_mask.cuda(non_blocking=True)
         q_input = q_input.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
 
@@ -421,9 +423,11 @@ def validate(val_loader, model):
                 break
             iter_num += 1
             data_time.update(time.time() - end)
-
-            s_input = s_input.cuda(non_blocking=True)
-            s_mask = s_mask.cuda(non_blocking=True)
+            for k in range(len(s_input)):
+                s_input[k] = s_input[k].cuda(non_blocking=True)
+                s_mask[k] = s_mask[k].cuda(non_blocking=True)
+            # s_input = s_input.cuda(non_blocking=True)
+            # s_mask = s_mask.cuda(non_blocking=True)
             q_input = q_input.cuda(non_blocking=True)
             target = target.cuda(non_blocking=True)
 

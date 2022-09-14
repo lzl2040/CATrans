@@ -21,8 +21,8 @@ class FFN(nn.Module):
         x = self.dropout_1(x)
         x = self.w2(x)
         x = self.dropout_2(x)
-        # x = self.layer_norm(x)
-        # x += residual
+        x = self.layer_norm(x)
+        x += residual
         # x = self.layer_norm(x)
         return x
 
@@ -187,6 +187,8 @@ class AttentionBlock(nn.Module):
         ### dropout
         attention = self.proj_drop(attention)
         ## 加入残差损失
+        # print(attention.shape)
+        # print(resnet.shape)
         attention += resnet
         ## 进行LN归一化操作
         attention = self.LN(attention)
@@ -197,10 +199,10 @@ class AttentionBlock(nn.Module):
 class Decoder(nn.Module):
     def __init__(self,in1,in2,in3,in4,in5):
         super(Decoder,self).__init__()
-        self.conv1 = Conv(in_channels=in1,out_channels=256,ks=3,st=2,p=1)
-        self.conv2 = Conv(in_channels=in2,out_channels=256,ks=3,st=2,p=1)
-        self.conv3 = Conv(in_channels=in3,out_channels=256,ks=3,st=2,p=1)
-        self.conv4 = Conv(in_channels=in4,out_channels=256,ks=3,st=2,p=1)
+        self.conv1 = Conv(in_channels=in1,out_channels=128,ks=3,st=2,p=1)
+        self.conv2 = Conv(in_channels=in2,out_channels=128,ks=3,st=2,p=1)
+        self.conv3 = Conv(in_channels=in3,out_channels=128,ks=3,st=2,p=1)
+        self.conv4 = Conv(in_channels=in4,out_channels=128,ks=3,st=2,p=1)
         # 1*1 conv 转换维度
         self.conv5 = Conv(in_channels=in5,out_channels=2,ks=3,st=1,p=1)
         # self.conv5 = nn.Conv2d(in_channels=in5,out_channels=2,kernel_size=1,stride=1,padding=0)
@@ -219,7 +221,7 @@ class Decoder(nn.Module):
         predict_label = torch.concat([predict_label,mid_ft3],dim=1)
         predict_label = self.conv5(predict_label)
         predict_label = self.upsample(predict_label,times=4,up_mode='bilinear')
-        predict_label = torch.squeeze(predict_label)
+        # predict_label = torch.squeeze(predict_label)
         # predict_label = self.relu(predict_label)
         return predict_label
 

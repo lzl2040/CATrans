@@ -62,23 +62,13 @@ def make_dataset(split=0, data_root=None, data_list=None, sub_list=None, filter_
 
         new_label_class = []
 
-        if filter_intersection:  # filter images containing objects of novel categories during meta-training
-            if set(label_class).issubset(set(sub_list)):
-                for c in label_class:
-                    if c in sub_list:
-                        tmp_label = np.zeros_like(label)
-                        target_pix = np.where(label == c)
-                        tmp_label[target_pix[0], target_pix[1]] = 1
-                        if tmp_label.sum() >= 2 * 32 * 32:
-                            new_label_class.append(c)
-        else:
-            for c in label_class:
-                if c in sub_list:
-                    tmp_label = np.zeros_like(label)
-                    target_pix = np.where(label == c)
-                    tmp_label[target_pix[0], target_pix[1]] = 1
-                    if tmp_label.sum() >= 2 * 32 * 32:
-                        new_label_class.append(c)
+        for c in label_class:
+            if c in sub_list:
+                tmp_label = np.zeros_like(label)
+                target_pix = np.where(label == c)
+                tmp_label[target_pix[0], target_pix[1]] = 1
+                if tmp_label.sum() >= 2 * 32 * 32:
+                    new_label_class.append(c)
 
         label_class = new_label_class
 
@@ -207,10 +197,6 @@ class SemData(Dataset):
         # self.sub_class_file_list = eval(f_str)
 
         self.transform = transform
-        # self.transform_tri = transform_tri
-        self.ft_transform = ft_transform
-        self.ft_aug_size = ft_aug_size
-        self.ms_transform_list = ms_transform
 
     def __len__(self):
         return len(self.data_list)
@@ -222,7 +208,6 @@ class SemData(Dataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = np.float32(image)
         label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
-        # label_b = cv2.imread(os.path.join(self.base_path,label_path.split('/')[-1]), cv2.IMREAD_GRAYSCALE)
 
         if image.shape[0] != label.shape[0] or image.shape[1] != label.shape[1]:
             raise (RuntimeError("Query Image & label shape mismatch: " + image_path + " " + label_path + "\n"))
@@ -250,13 +235,6 @@ class SemData(Dataset):
             label[target_pix[0], target_pix[1]] = 1
         label[ignore_pix[0], ignore_pix[1]] = 255
 
-        # for cls in range(1,self.num_classes+1):
-        #     select_pix = np.where(label_b_tmp == cls)
-        #     if cls in self.sub_list:
-        #         label_b[select_pix[0],select_pix[1]] = self.sub_list.index(cls) + 1
-        #     else:
-        #         label_b[select_pix[0],select_pix[1]] = 0
-
         file_class_chosen = self.sub_class_file_list[class_chosen]
         num_file = len(file_class_chosen)
 
@@ -267,17 +245,15 @@ class SemData(Dataset):
             support_idx = random.randint(1, num_file) - 1
             support_image_path = image_path
             support_label_path = label_path
-            while ((
-                           support_image_path == image_path and support_label_path == label_path) or support_idx in support_idx_list):
+            while ((support_image_path == image_path and support_label_path == label_path) or support_idx in support_idx_list):
                 support_idx = random.randint(1, num_file) - 1
                 support_image_path, support_label_path = file_class_chosen[support_idx]
             support_idx_list.append(support_idx)
             support_image_path_list.append(support_image_path)
             support_label_path_list.append(support_label_path)
 
-        support_image_list_ori = []
-        support_label_list_ori = []
-        support_label_list_ori_mask = []
+        support_image_list = []
+        support_label_list = []
         subcls_list = []
         if self.mode == 'train':
             subcls_list.append(self.sub_list.index(class_chosen))
@@ -294,38 +270,30 @@ class SemData(Dataset):
             ignore_pix = np.where(support_label == 255)
             support_label[:, :] = 0
             support_label[target_pix[0], target_pix[1]] = 1
-
-            support_label, support_label_mask = transform_anns(support_label, self.ann_type)  # mask/bbox
             support_label[ignore_pix[0], ignore_pix[1]] = 255
-            support_label_mask[ignore_pix[0], ignore_pix[1]] = 255
             if support_image.shape[0] != support_label.shape[0] or support_image.shape[1] != support_label.shape[1]:
                 raise (RuntimeError(
                     "Support Image & label shape mismatch: " + support_image_path + " " + support_label_path + "\n"))
-            support_image_list_ori.append(support_image)
-            support_label_list_ori.append(support_label)
-            support_label_list_ori_mask.append(support_label_mask)
-        assert len(support_label_list_ori) == self.shot and len(support_image_list_ori) == self.shot
+            support_image_list.append(support_image)
+            support_label_list.append(support_label)
+        assert len(support_label_list) == self.shot and len(support_image_list) == self.shot
 
-        raw_image = image.copy()
         raw_label = label.copy()
-        # raw_label_b = label_b.copy()
-        support_image_list = [[] for _ in range(self.shot)]
-        support_label_list = [[] for _ in range(self.shot)]
         if self.transform is not None:
             # image, label, label_b = self.transform_tri(image, label, label_b)   # transform the triple
             image, label = self.transform(image, label)
             for k in range(self.shot):
-                support_image_list[k], support_label_list[k] = self.transform(support_image_list_ori[k],
-                                                                              support_label_list_ori[k])
+                support_image_list[k], support_label_list[k] = self.transform(support_image_list[k],
+                                                                              support_label_list[k])
 
-        s_xs = support_image_list
-        s_ys = support_label_list
-        s_x = s_xs[0].unsqueeze(0)
-        for i in range(1, self.shot):
-            s_x = torch.cat([s_xs[i].unsqueeze(0), s_x], 0)
-        s_y = s_ys[0].unsqueeze(0)
-        for i in range(1, self.shot):
-            s_y = torch.cat([s_ys[i].unsqueeze(0), s_y], 0)
+        s_x = support_image_list
+        s_y = support_label_list
+        # s_x = s_xs[0].unsqueeze(0)
+        # for i in range(1, self.shot):
+        #     s_x = torch.cat([s_xs[i].unsqueeze(0), s_x], 0)
+        # s_y = s_ys[0].unsqueeze(0)
+        # for i in range(1, self.shot):
+        #     s_y = torch.cat([s_ys[i].unsqueeze(0), s_y], 0)
 
         # Return
         if self.mode == 'train':
@@ -333,9 +301,8 @@ class SemData(Dataset):
         elif self.mode == 'val':
             return image, label, s_x, s_y, subcls_list
         elif self.mode == 'demo':
-            total_image_list = support_image_list_ori.copy()
-            total_image_list.append(raw_image)
-            return image, label, s_x, s_y, subcls_list, total_image_list, support_label_list_ori, support_label_list_ori_mask, raw_label
+            total_image_list = support_image_list.copy()
+            return image, label, s_x, s_y, subcls_list, total_image_list, raw_label
 
 
 # -------------------------- GFSS --------------------------

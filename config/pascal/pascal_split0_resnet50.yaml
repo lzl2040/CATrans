@@ -20,11 +20,11 @@ Train:
   padding_label: 255
   # Dataset & Mode
   split: 0
-  shot: 1
+  shot: 2
   data_set: 'pascal'
   use_split_coco: False # True means FWB setting
   # Optimizer
-  batch_size: 8 # batch size for training (bs8 for 1GPU)
+  batch_size: 4 # batch size for training (bs8 for 1GPU)
   base_lr: 0.005
   lr: 5e-5
   epochs: 100
